@@ -34,4 +34,7 @@ assets/公司品牌图/
 # 组合报告只存本地，不公开
 reports/portfolio-latest.md
 
+# 个人权限/环境配置，不公开
+.claude/settings.local.json
+
 # 实盘记录/ 公开权重口径版；原始账本（含股数/金额）在 local/实盘记录-原始/（已被 /local/ 规则覆盖）
