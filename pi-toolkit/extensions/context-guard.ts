@@ -132,13 +132,18 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	/**
-	 * 可压缩的硬下限。
-	 * pi 压缩时要向前找到一个切点，保留 keepRecentTokens（默认 20000）的最近消息。
+	 * 可压缩的硬下限 —— 必须显著高于 pi 的 compaction.keepRecentTokens。
+	 *
+	 * pi 压缩时要向前找切点，保留 keepRecentTokens（**默认 20000**）的最近消息。
 	 * 若上下文总量还不到这个量，就根本不存在合法切点，调 compact() 会报
 	 * "Nothing to compact (session too small)" 并中断当前 run。
-	 * 所以触发阈值必须取 max(计算出的 limit, 本下限)，否则小会话上会反复白试。
+	 *
+	 * 之前这里是 16000，低于 keepRecentTokens，等于一直在白试。
+	 * 现在取 28000（≈ 20000 × 1.4），留出一个多回合的余量。
+	 * 若以后把 settings.json 里的 compaction.keepRecentTokens 改小了，
+	 * 这个常量可以同步下调，但绝不能低于它。
 	 */
-	const MIN_COMPACTABLE = 16_000;
+	const KEEP_RECENT_TOKENS_FLOOR = 28_000;
 
 	/** 触发阈值 = min(窗口 × 比例, 绝对上限)；窗口未知时返回 0（不动作） */
 	function computeLimit(): number {
@@ -146,11 +151,11 @@ export default function (pi: ExtensionAPI) {
 		return Math.min(ctxWindow * ratio, maxTarget);
 	}
 
-	/** 实际生效的触发点：低于 MIN_COMPACTABLE 时不可能压缩成功 */
+	/** 实际生效的触发点：低于 KEEP_RECENT_TOKENS_FLOOR 时不可能压缩成功 */
 	function effectiveTrigger(): number {
 		const limit = computeLimit();
 		if (limit <= 0) return 0;
-		return Math.max(limit, MIN_COMPACTABLE);
+		return Math.max(limit, KEEP_RECENT_TOKENS_FLOOR);
 	}
 
 	/**
@@ -249,7 +254,7 @@ export default function (pi: ExtensionAPI) {
 			render(ctx);
 			const limit = effectiveTrigger();
 			ctx.ui.notify(
-				`guard ${enabled ? "已开启" : "已关闭"}｜触发点 = max(min(窗口 ${fmtTok(ctxWindow)} × ${(ratio * 100).toFixed(0)}%, 上限 ${fmtTok(maxTarget)}), 下限 ${fmtTok(MIN_COMPACTABLE)}) = ${limit > 0 ? fmtTok(limit) : "窗口未知"}`,
+				`guard ${enabled ? "已开启" : "已关闭"}｜触发点 = max(min(窗口 ${fmtTok(ctxWindow)} × ${(ratio * 100).toFixed(0)}%, 上限 ${fmtTok(maxTarget)}), 下限 ${fmtTok(KEEP_RECENT_TOKENS_FLOOR)}) = ${limit > 0 ? fmtTok(limit) : "窗口未知"}`,
 				"info",
 			);
 		},
@@ -269,7 +274,7 @@ export default function (pi: ExtensionAPI) {
 		ctxWindow = resolveWindow(ctx);
 		ctxTokens = ctx.getContextUsage()?.tokens ?? 0;
 		log(
-			`session_start reason=${(event as any).reason} enabled=${enabled} ratio=${ratio} max=${maxTarget} window=${ctxWindow} limit=${Math.round(effectiveTrigger())} (base ${Math.round(computeLimit())}, floor ${MIN_COMPACTABLE}) tokens=${ctxTokens}`,
+			`session_start reason=${(event as any).reason} enabled=${enabled} ratio=${ratio} max=${maxTarget} window=${ctxWindow} limit=${Math.round(effectiveTrigger())} (base ${Math.round(computeLimit())}, floor ${KEEP_RECENT_TOKENS_FLOOR}) tokens=${ctxTokens}`,
 		);
 		render(ctx);
 		if (enabled && ctxWindow <= 0) {

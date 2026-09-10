@@ -74,22 +74,31 @@ agents/
 | `/guard` 阈值计算 | ✅ **已验证** | `guard.log` 记录 `limit=28000 (base 28000, floor 16000)` |
 | `/guard` 触发判定 | ✅ **已验证** | 实测 `FIRE tokens=118150 limit=28000` 按预期触发 |
 | 看门狗不再崩溃 | ✅ **已验证** | 修复「回调里 ctx 已失效」后，异常路径 `exit=0` 且退出干净 |
-| **自动压缩真的成功** | ❌ **未验证** | 所有测试都在 `-p` 非交互模式下跑，`compact()` 是 fire-and-forget，进程退出会把它杀掉（`This operation was aborted`）。**需要在真实交互式会话里确认** |
+| **自动压缩真的成功** | ❌ **未验证** | 3 次不同形态的测试（单回合大输出 / 多回合 18 条消息 / 命令路径）均返回 `aborted`。但有一项关键证据指向「非交互模式假象」而非逻辑 bug：报错是 `Turn prefix summarization failed`，**说明第一段摘要（history）已经跑完了，是第二段（turn prefix）被中断**——符合“进程开始退出、把未完成的 fire-and-forget 调用杀掉”的特征。见下方 30 秒自测 |
 | 思考等级降档省钱 | ✅ 已生效 | `settings.json` 中 `defaultThinkingLevel: medium` |
 | 子代理隔离上下文 | ✅ **已验证** | 端到端派发 `web-scout` 成功；固定开销 ≈ 4.2k 输入 token |
 
 ### 自动压缩的 30 秒自测（需要你来做）
 
-我的测试环境无法模拟交互式 TUI，所以这一步只能你来：
+我的测试环境无法模拟交互式 TUI（pi 在非 TTY 下不会保持存活，用 FIFO 也不行），所以这一步只能你来。
 
-1. 正常开一个 pi 会话，干点会让上下文涨过 60k 的活（或直接 `/guard 0.2` 把阈值压到 26k，更快）
-2. 观察 footer 状态行：`ctx` 变黄 → 变红
-3. 一轮结束后看 `~/.pi/agent/guard.log`：
-   - 出现 `FIRE tokens=...` → 触发逻辑正常
-   - 接着出现 `DONE before=...` → **压缩成功，自动化可用**
-   - 出现 `ERROR ... aborted` → 自动化在交互模式下也不可用，**请用 `/guard compact` 手动压**，并靠「按阶段开新会话」的纪律兜底
+**最快路径**：开一个正常 pi 会话，直接 `/guard 0.05`（把阈值压到约 5 万），随便问几个问题把上下文推过阈值，然后：
+
+```bash
+cat ~/.pi/agent/guard.log
+```
+
+按日志末尾是什么分三种情况：
+
+| 日志 | 含义 | 你要做什么 |
+|---|---|---|
+| `FIRE ...` → `DONE before=...` | ✅ **自动压缩可用** | 什么都不用做 |
+| `FIRE ...` → `ERROR ... aborted` | ❌ 交互模式下也不可用 | 改用 `/guard compact` 手动压，并靠「按阶段开新会话」兜底 |
+| `FIRE ...` → `SKIP-BENIGN Nothing to compact` | 会话还不够大 | 再多聊几轮，或忽略（属正常退避） |
 
 **无论哪种结果都不影响已经生效的部分**：`/cost` 的可见性、`/guard compact` 手动压缩、子代理隔离上下文、AGENTS.md 里的会话分段纪律。
+
+另一个更可靠的替代：**什么都不自动化，就靠“按阶段开新会话”**——把长任务拆成每段 20-30k 上下文的独立会话。这不需要任何扩展支持，效果确定。
 
 ---
 
@@ -130,11 +139,13 @@ agents/
 
 后两个大概率是 `-p` 非交互模式下进程退出所致（`compact()` 不等待完成），但我**无法在无 TTY 环境里排除**，故标为未验证。详见上面「自动压缩的 30 秒自测」。
 
-### 4. 压缩有一个硬下限
+### 4. 压缩有一个硬下限（已踩两次）
 
-pi 压缩时要向前找切点，保留 `keepRecentTokens`（默认 20000）。**上下文不到这个量就根本不存在合法切点**，调用会报 `Nothing to compact (session too small)` 并中断当前 run。
+pi 压缩时要向前找切点，保留 `keepRecentTokens`（**默认 20000**）。**上下文不到这个量就根本不存在合法切点**，调用会报 `Nothing to compact (session too small)` 并中断当前 run。
 
-所以触发点取 `max(计算值, 16000)` — 低于这个数一律不尝试。
+第一次把下限设成 16000——低于 keepRecentTokens，等于一直在白试。现取 **28000**（≈ 20000 × 1.4），留出一个多回合的余量。
+
+> 若以后把 `settings.json` 里的 `compaction.keepRecentTokens` 改小，这个常量（`KEEP_RECENT_TOKENS_FLOOR`）可以同步下调，但**绝不能低于它**。
 
 ### 5. 回调里的 ctx 会失效
 
