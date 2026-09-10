@@ -55,6 +55,36 @@ validation tools. Keep compatibility with both Claude Code and Codex users.
 - Clearly label low-confidence conclusions, incomplete data, and source gaps.
 - This project is for learning and research, not investment advice.
 
+## Cost Discipline
+
+Long research runs are the main cost driver. Measured ledger from one machine: a
+single 654-call session averaged **88.8k tokens of context per call** and alone
+consumed 51.8% of all spend. Cost splits roughly as: re-sent context 29%,
+newly-added content 40%, output+reasoning 31%. Cache hit rate (89%) and model
+pricing are already optimal, so the only real lever left is
+**call count × context size**.
+
+Hard rules:
+
+- **Split long tasks by phase into separate sessions.** Write intermediates to
+  disk; the next session reads only the slice it needs. A several-hundred-turn
+  marathon session is the most expensive way to work.
+- **Compact at 60k tokens**, do not wait for automatic compaction. pi reports
+  `deepseek-v4-flash` with a 1,000,000-token window, so the built-in threshold
+  (`window - reserveTokens`) sits near 984k and effectively never fires.
+- **Delegate reading and searching to subagents.** Raw search noise kept in the
+  main session is re-read on every later call. The `subagent` tool plus the four
+  research agents in `pi-toolkit/agents/` keep the main session small. Each
+  dispatch costs ~4.2k input tokens of fixed overhead, so do not use it for
+  trivial tasks.
+- **Route mechanical work to cheap tiers** (data fetching, screening, formatting)
+  and reserve the expensive tier for final judgment and prose.
+- Do not `/reload` or edit `skills/` or `AGENTS.md` mid-session; it invalidates
+  the prompt prefix cache.
+
+Tooling and acceptance thresholds: `pi-toolkit/README.md`.
+Inspect real spend with `/cost`, live context with `/guard`.
+
 ## Editing Rules
 
 - Preserve existing report files unless the task specifically asks to change
