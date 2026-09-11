@@ -216,6 +216,10 @@ This skill is generated from `skills/thesis-tracker.md` so Claude Code and Codex
 
 ---
 
+## 成本纪律
+
+上下文超过 60k 时主动 `/compact`。中间产物写入文件而非只留在对话里。pi 的自动压缩阈值在 1M 窗口下基本不触发，必须手动。
+
 ## 关键原则
 
 - **买入前就写好卖出条件** — 冷静时做的决策比恐慌时做的好

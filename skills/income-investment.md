@@ -176,6 +176,10 @@ Use these headings exactly once and avoid repeating the same analysis:
 
 Save the result to `reports/{company}-income-investment-{YYYYMMDD}.md`, using a filesystem-safe company identifier. Include the scorecard and blocking-gate result in section 2, the monthly income calendar in section 11 when calculable, and source title, issuer/publisher, publication date, accessed date, reporting period, URL, and primary/secondary label in section 18.
 
+## 成本纪律
+
+上下文超过 60k 时主动 `/compact`。中间产物写入文件而非只留在对话里。pi 的自动压缩阈值在 1M 窗口下基本不触发，必须手动。
+
 ## Release Audit
 
 ```bash

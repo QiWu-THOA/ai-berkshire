@@ -295,6 +295,13 @@ python3 tools/report_audit.py verdict \
 
 ---
 
+## 成本纪律
+
+1. **检索阶段用 subagent 隔离**（pi 用 `subagent` 扩展，Claude Code 用 Task/Agent）——避免搜索噪音撑大主会话上下文
+2. **中间产物落盘**——关键输出写入文件，不只留在对话里
+3. **上下文超过 60k 主动 `/compact`**——pi 的自动压缩阈值在 1M 窗口下基本不触发，必须手动
+4. **不要 `/reload` 或改 `skills/`**——会作废前缀缓存
+
 ## 后续动作
 
 漏斗终选 3 家后，对每家可单独执行：

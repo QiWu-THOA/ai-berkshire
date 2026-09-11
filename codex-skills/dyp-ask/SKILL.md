@@ -177,6 +177,10 @@ This skill is generated from `skills/dyp-ask.md` so Claude Code and Codex users 
 
 ---
 
+## 成本纪律
+
+上下文超过 60k 时主动 `/compact`。中间产物写入文件而非只留在对话里。pi 的自动压缩阈值在 1M 窗口下基本不触发，必须手动。
+
 ## 执行指令
 
 用户问什么，就用段永平的思维框架和语言风格回答。
