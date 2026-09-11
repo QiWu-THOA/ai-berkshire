@@ -1,0 +1,46 @@
+三、按用途分组，配典型场景
+
+ 深度研究（重，会开并行子代理）
+ - investment-research — 单次四大师综合（最常用）
+ - investment-team — 4 角色并行团队，最快最全
+ - private-company-research — 未上市、信息稀少（SpaceX/小红书）
+ - management-deep-dive — 管理层是核心变量时
+ - deep-company-series — 3-8 篇长文系列，公众号级，成本最高
+
+ 快速筛（便宜，先跑这个）
+ - investment-checklist — 巴菲特六关，10 分钟判是否值得深入
+ - quality-screen — 7 条硬指标去劣
+ - industry-funnel — 全市场 → ≤10 家 → 终选 3 家
+ - industry-research / bottleneck-hunter — 产业链全景 / 瓶颈套利
+
+ 财报：earnings-review（自己读）、earnings-team（四大师 + 成稿发布）
+
+ 持仓管理：thesis-tracker（持有期跟踪）、thesis-drift（对比两份报告，分清事实变 vs 措辞变）、portfolio-review（组合层）
+ 、news-pulse（异动 10 分钟归因）、income-investment（高息陷阱 vs 可持续分红）
+
+ 思维工具：dyp-ask（段永平口吻）、financial-data（双源交叉验证规范，被 12 个 skill 引用）
+
+ 写作 overlay：investment-memo-craft 是 Codex-only 的排版/行文规范，写长报告时让它叠上去。
+
+ 一个省钱的串联套路：
+
+ ```
+   investment-checklist  →  quality-screen  →  investment-research  →  thesis-tracker
+      10 分钟否掉 90%        7 条硬指标砍        只剩值得深挖的才做         买入后才上
+ ```
+
+ 四、配套的 pi 专属能力（这套 skill 的"零件"）
+
+ - 4 个研究子代理（已装在 ~/.pi/agent/agents/，来源 pi-toolkit/agents/）：web-scout（检索取证）、fact-verifier（双源交
+   叉验证）、primary-reader（读年报，只回传压缩摘要）、comps-analyst（可比公司估值）。skill 里的"多 Agent 团队"就是靠
+   subagent 工具调它们，主会话不会被原文灌爆。
+ - /cost（真实账本，/cost all 看全会话排行）、/guard（实时上下文 + 阈值告警、/guard compact 手动压）。
+
+ 五、三个坑
+
+ 1. 相对路径引用失效：skill 正文里写的是 skills/financial-data.md（Claude 源路径），在 pi 下要读
+    ~/ai-berkshire/codex-skills/financial-data/SKILL.md。引 tools/*.py 的没问题（51 处 tools/financial_rigor.py 等，从
+    仓库根跑即可）。
+ 2. 别手改 codex-skills/：它是生成的。改 skills/*.md 后跑 python3 scripts/sync-codex-skills.py，验证用 --check。
+ 3. 成本：deep-company-series、earnings-team、investment-team 是几百轮量级的长任务 —— 按阶段开新会话、中间产物落盘，别
+    在同一个会话里连着跑三个。
