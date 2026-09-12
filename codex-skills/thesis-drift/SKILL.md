@@ -19,8 +19,8 @@ This skill is generated from `skills/thesis-drift.md` so Claude Code and Codex u
 
 **支持输入格式**：
 - `公司名 旧报告路径 新报告路径` — 指定两份研究报告或论文快照进行对比
-- `公司名 reports/{公司名}-thesis-旧日期.md reports/{公司名}-thesis-新日期.md` — 对比两份带日期的论文快照
-- `公司名` — 自动查找 `reports/{公司名}-thesis.md` 及同目录历史快照；如果没有基线则转入缺失基线处理
+- `公司名 reports/{公司名}/{公司名}-thesis-旧日期.md reports/{公司名}/{公司名}-thesis-新日期.md` — 对比两份带日期的论文快照
+- `公司名` — 自动查找 `reports/{公司名}/{公司名}-thesis.md` 及同公司目录下的历史快照；如果没有基线则转入缺失基线处理
 
 > "当事实改变时，我就改变想法。你呢？" —— 凯恩斯
 >
@@ -43,7 +43,7 @@ This skill is generated from `skills/thesis-drift.md` so Claude Code and Codex u
 
 解析 `$ARGUMENTS`：
 - 如果提供两份报告路径 → 进入**指定报告对比**模式
-- 如果只提供公司名 → 查找 `reports/{公司名}-thesis.md` 及历史快照，进入**自动快照对比**模式
+- 如果只提供公司名 → 查找 `reports/{公司名}/{公司名}-thesis.md` 及历史快照，进入**自动快照对比**模式
 - 如果只找到一份报告或没有历史基线 → 进入**缺失基线处理**模式
 - 如果两份报告不是同一家公司 → 停止并要求用户确认，不做跨公司漂移判断
 
@@ -169,9 +169,9 @@ python3 tools/financial_rigor.py calc --expr '{精确算式}'
 ### B1：查找快照
 
 在 `reports/` 中查找：
-- `reports/{公司名}-thesis.md`
-- `reports/{公司名}-thesis-*.md`
-- `reports/{公司名}/` 目录下包含 `thesis`、`论文`、`追踪` 的报告
+- `reports/{公司名}/{公司名}-thesis.md`
+- `reports/{公司名}/{公司名}-thesis-*.md`
+- `reports/{公司名}-thesis*.md`（早期平铺命名，兼容旧文件）
 
 选择时间最早且结构完整的文件作为旧报告，时间最新的文件作为新报告。若用户指定日期，以用户指定为准。
 
@@ -197,7 +197,7 @@ python3 tools/financial_rigor.py calc --expr '{精确算式}'
 1. 明确说明：**缺少可比较的历史基线，不能执行漂移检测**
 2. 不要根据记忆或市场印象补造旧论文
 3. 引导用户先使用 `/thesis-tracker {公司名} 建立论文` 建立结构化基线
-4. 如果当前报告已足够完整，可建议将它保存为 `reports/{公司名}-thesis.md` 作为未来漂移检测基线
+4. 如果当前报告已足够完整，可建议将它保存为 `reports/{公司名}/{公司名}-thesis.md` 作为未来漂移检测基线
 
 输出格式：
 

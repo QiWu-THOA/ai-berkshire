@@ -140,7 +140,7 @@
 
 #### 5.2 寻找替代标的
 
-如果组合中有"不如现金"的仓位，或者现金占比过高，建议使用 `/industry-research` 或 `/investment-checklist` 对感兴趣的行业/公司进行系统筛选，而非在本Skill内直接推荐个股。
+如果组合中有"不如现金"的仓位，或者现金占比过高，建议使用 `/industry-research` 或 `/investment-checklist` 对感兴趣的行业/公司进行系统筛选，而非在本Skill内直接推荐个股。两者的产出分别落在 `reports/{行业名}-industry-{YYYYMMDD}.md`（根目录）和 `reports/{公司名}/{公司名}-checklist-{YYYYMMDD}.md`，可直接引用，不必重新检索。
 
 #### 5.3 现金管理
 

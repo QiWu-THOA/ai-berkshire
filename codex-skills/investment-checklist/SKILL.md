@@ -235,7 +235,14 @@ python3 tools/financial_rigor.py three-scenario \
 - ❓ **灰色地带** — 说明关键争议点是什么，投资者需要自行判断什么
 - N/A — 未上市/无法买入
 
-将完整报告写入 `~/巴菲特Checklist-[公司名或"多公司对比"].md`
+将完整报告写入以下路径（与 `/investment-research`、`/investment-team` 落在同一公司目录下，便于上下游衔接）：
+
+| 场景 | 输出路径 |
+|------|---------|
+| 单公司 | `reports/{公司名}/{公司名}-checklist-{YYYYMMDD}.md` |
+| 多公司 | `reports/多公司对比-checklist-{公司列表}-{YYYYMMDD}.md`（根目录，如 `多公司对比-checklist-工业富联vs立讯精密-20260830.md`） |
+
+**上下游衔接**：Checklist 是买入前闸门，不是研究终点。判为 ✅ 通过的公司，应继续运行 `/investment-research` 或 `/investment-team` 做深度研究——它们会把报告写进 `reports/{公司名}/` 同一目录，形成「闸门 → 深度研究 → 论文跟踪」的完整链条；判为 ❌ 未通过的公司，同一目录保留判决书，供日后价格回到击球区时复查，或供 `/thesis-drift` 做前后对比。
 
 ## 输出格式要求
 
@@ -249,7 +256,7 @@ python3 tools/financial_rigor.py three-scenario \
 ## 成本纪律
 
 1. **检索阶段用 subagent 隔离**（pi 用 `subagent` 扩展，Claude Code 用 Task/Agent）——避免搜索噪音撑大主会话上下文
-2. **中间产物落盘**——关键输出写入文件，不只留在对话里
+2. **中间产物落盘**——各公司数据收集结果先写入 `reports/{公司名}/` 下的底稿文件，最终报告另存为 `{公司名}-checklist-{YYYYMMDD}.md`，不要只留在对话里
 3. **上下文超过 60k 主动 `/compact`**——pi 的自动压缩阈值在 1M 窗口下基本不触发，必须手动
 4. **不要 `/reload` 或改 `skills/`**——会作废前缀缓存
 

@@ -209,7 +209,19 @@ This skill is generated from `skills/investment-team.md` so Claude Code and Code
 
 ### 第八步：保存报告
 
-将完整最终报告写入 `~/{公司名}投资研究报告_{日期}.md`（日期格式 YYYYMMDD）。
+全部产物按 CLAUDE.md 的目录规范写入 `reports/{公司名}/`，不留在家目录：
+
+```
+reports/{公司名}/
+├── README.md                         — 研究框架概览+核心结论
+├── 01-商业模式分析-段永平视角.md
+├── 02-财务估值分析-巴菲特视角.md
+├── 03-行业竞争分析-芒格视角.md
+├── 04-风险管理层评估-李录视角.md
+└── 最终报告.md                       — Team Lead 综合报告
+```
+
+若该目录下已有 Checklist 报告（`{公司名}-checklist-*.md`），最终报告应在开篇引用其六关评分与击球区价格，保持结论可比。
 
 ### 第九步：数据抽检（准出流程）
 
